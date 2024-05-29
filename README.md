@@ -3,6 +3,7 @@
 ### EXTENDA_GCLOUD_AUTH_BASE64
 
 `gcloud auth application-default login`
+
 `cat ~/.config/gcloud/application_default_credentials.json | base 64`
 
 ### EXTENDA_NEXUS_TOKEN
@@ -13,11 +14,14 @@ Nexus email
 
 ### GPG
 `gpg --full-generate-key`
+
 `gpg --list-secret-keys --keyid-format=long`
+
 `gpg --armor --export <GPG_SIGNING_KEY>`
 
 #### GPG_PRIVATE_KEY_BASE64
 `gpg --output private.pgp --armor --export-secret-key <GPG_SIGNING_KEY>`
+
 `cat private.pgp | base64`
 
 #### GPG_SIGNING_KEY
