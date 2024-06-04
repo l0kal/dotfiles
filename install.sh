@@ -30,22 +30,23 @@ git_setup() {
     echo "Git: Use rebase to pull"
     git config --global pull.rebase false
 
-    # if [ -n "${GPG_PRIVATE_KEY_BASE64:-}" ]; then
+    if [ -n "${GPG_PRIVATE_KEY_BASE64:-}" ]; then
+        echo "Git: Installing GPG key"
+        gpg --verbose --batch --import <(echo "${GPG_PRIVATE_KEY_BASE64}" | base64 -di)
+        echo 'pinentry-mode loopback' >> ~/.gnupg/gpg.conf
+        git config --global user.signingkey "${GPG_SIGNING_KEY}"
+        git config --global commit.gpgsign true
+        git config --global tag.gpgsign true
+        git config --global gpg.program gpg
+    fi
+
+    # if [[ ! -z $GNUGPG  ]]; then
     #     echo "Git: Installing GPG key"
-    #     gpg --verbose --batch --import <(echo "${GPG_PRIVATE_KEY_BASE64}" | base64 -d)
-    #     echo 'pinentry-mode loopback' >> ~/.gnupg/gpg.conf
-    #     git config --global user.signingkey "${GPG_SIGNING_KEY}"
-    #     git config --global commit.gpgsign true
+    #     rm -rf $HOME/.gnupg;
+    #     (cd $HOME ; echo $GNUGPG | base64 -d | tar --no-same-owner -xzvf -);
+    #     git config --global commit.gpgsign true;
     #     git config --global tag.gpgsign true
     # fi
-
-    if [[ ! -z $GNUGPG  ]]; then
-        echo "Git: Installing GPG key"
-        rm -rf $HOME/.gnupg;
-        (cd $HOME ; echo $GNUGPG | base64 -d | tar --no-same-owner -xzvf -);
-        git config --global commit.gpgsign true;
-        git config --global tag.gpgsign true
-    fi
 }
 
 gcloud_auth_setup() {
