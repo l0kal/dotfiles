@@ -9,7 +9,7 @@
 ### EXTENDA_NEXUS_TOKEN
 NEXUS tokencat 
 
-### EXYENDA_NEXUS_EMAIL
+### EXTENDA_NEXUS_EMAIL
 Nexus email
 
 ### GPG
