@@ -39,14 +39,6 @@ git_setup() {
         git config --global tag.gpgsign true
         git config --global gpg.program gpg
     fi
-
-    # if [[ ! -z $GNUGPG  ]]; then
-    #     echo "Git: Installing GPG key"
-    #     rm -rf $HOME/.gnupg;
-    #     (cd $HOME ; echo $GNUGPG | base64 -d | tar --no-same-owner -xzvf -);
-    #     git config --global commit.gpgsign true;
-    #     git config --global tag.gpgsign true
-    # fi
 }
 
 gcloud_auth_setup() {
