@@ -12,7 +12,7 @@ NEXUS tokencat
 ### EXTENDA_NEXUS_EMAIL
 Nexus email
 
-### GPG
+### GPG not working
 `gpg --full-generate-key`
 
 `gpg --list-secret-keys --keyid-format=long`
