@@ -1,54 +1,20 @@
 #!/bin/bash
 
-main() {
-    aliases_setup || (echo "aliases_setup job failed and exited" && exit 1)
-    npm_setup || (echo "npm_setup job failed and exited" && exit 1)
-    git_setup || (echo "git_setup job failed and exited" && exit 1)
-    gcloud_auth_setup || (echo "gcloud_auth_setup job failed and exited" && exit 1)
-}
+# Define the custom plugins directory
+ZSH_CUSTOM=${ZSH_CUSTOM:-$HOME/.oh-my-zsh/custom}
 
-aliases_setup() {
-    echo "Setting up bash aliases"
+# 1. Change the default shell to Zsh for the current user
+echo "Setting Zsh as default shell..."
+sudo chsh -s "$(which zsh)" "$(id -un)"
 
-    cp "${HOME}/.dotfiles/.bash_aliases" "${HOME}/.bash_aliases"
-}
+# 2. Install custom Zsh plugins required by .zshrc
+echo "Installing custom Zsh plugins..."
+git clone https://github.com/zsh-users/zsh-autosuggestions.git ${ZSH_CUSTOM}/plugins/zsh-autosuggestions
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM}/plugins/zsh-syntax-highlighting
 
-npm_setup() {
-    echo "Setting up NPM"
+# 3. Create symlink for .zshrc from dotfiles repo to home directory
+# This assumes your .zshrc is in the root of your dotfiles repository
+echo "Creating symlink for .zshrc..."
+ln -sf "$HOME/dotfiles/.zshrc" "$HOME/.zshrc"
 
-    if [ -n "${EXTENDA_NEXUS_TOKEN:-}" ]; then
-        cp "${HOME}/.dotfiles/.npmrc" "${HOME}/.npmrc"
-        npm i -g @hiiretail/nest-app-cli
-    fi
-}
-
-git_setup() {
-    echo "Setting up Git"
-
-    git config --global push.autoSetupRemote true
-
-    echo "Git: Use rebase to pull"
-    git config --global pull.rebase false
-
-    if [ -n "${GPG_PRIVATE_KEY_BASE64:-}" ]; then
-        echo "Git: Installing GPG key"
-        gpg --verbose --batch --import <(echo "${GPG_PRIVATE_KEY_BASE64}" | base64 -di)
-        echo 'pinentry-mode loopback' >> ~/.gnupg/gpg.conf
-        git config --global user.signingkey "${GPG_SIGNING_KEY}"
-        git config --global commit.gpgsign true
-        git config --global tag.gpgsign true
-        git config --global gpg.program gpg
-    fi
-}
-
-gcloud_auth_setup() {
-    if [ -n "${EXTENDA_GCLOUD_AUTH_BASE64:-}" ]; then
-        mkdir -p ~/.config/gcloud
-        echo "${EXTENDA_GCLOUD_AUTH_BASE64}" | base64 -d > ~/.config/gcloud/application_default_credentials.json
-        sudo cp "${HOME}/.dotfiles/docker-credential-gcr" /usr/bin/docker-credential-gcr
-        sudo chmod +x /usr/bin/docker-credential-gcr
-        /usr/bin/docker-credential-gcr configure-docker
-    fi
-}
-
-main "$@"
+echo "Dotfiles setup complete!"
