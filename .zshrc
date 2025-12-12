@@ -18,6 +18,7 @@ plugins=(
   git
   docker
   docker-compose
+  node
   # Essential Productivity Plugins (Must be cloned to ZSH_CUSTOM/plugins)
   zsh-autosuggestions
   zsh-syntax-highlighting
