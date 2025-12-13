@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # --- Configuration ---
-DOTFILES_REPO_DIR="$HOME/dotfiles"
+DOTFILES_REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OMZ_DIR="$HOME/.oh-my-zsh"
 ZSH_CUSTOM="${OMZ_DIR}/custom"
 # The source .zshrc in your dotfiles repo
