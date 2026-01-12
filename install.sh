@@ -57,6 +57,7 @@ fi
 echo -e "\n➡️ Installing custom Zsh plugins..."
 safe_clone https://github.com/zsh-users/zsh-autosuggestions.git "${ZSH_CUSTOM}/plugins/zsh-autosuggestions"
 safe_clone https://github.com/zsh-users/zsh-syntax-highlighting.git "${ZSH_CUSTOM}/plugins/zsh-syntax-highlighting"
+safe_clone https://github.com/grigorii-zander/zsh-npm-scripts-autocomplete.git "${ZSH_CUSTOM}/plugins/zsh-npm-scripts-autocomplete"
 
 ## Step 4: Create symlink for .zshrc
 echo -e "\n➡️ Creating symlink for .zshrc..."
