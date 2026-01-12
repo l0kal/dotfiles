@@ -19,9 +19,11 @@ plugins=(
   docker
   docker-compose
   node
+  yarn
   # Essential Productivity Plugins (Must be cloned to ZSH_CUSTOM/plugins)
   zsh-autosuggestions
   zsh-syntax-highlighting
+  zsh-npm-scripts-autocomplete
   # Navigation & History
   z
   history
