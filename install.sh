@@ -4,13 +4,44 @@
 DOTFILES_REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OMZ_DIR="$HOME/.oh-my-zsh"
 ZSH_CUSTOM="${OMZ_DIR}/custom"
-# The source .zshrc in your dotfiles repo
 SOURCE_ZSHRC="${DOTFILES_REPO_DIR}/.zshrc"
 TARGET_ZSHRC="$HOME/.zshrc"
 
+# --- Extension List ---
+EXTENSIONS=(
+    anysphere.csharp
+    anysphere.cursorpyright
+    bierner.markdown-preview-github-styles
+    darkriszty.markdown-table-prettify
+    davidanson.vscode-markdownlint
+    dbaeumer.vscode-eslint
+    editorconfig.editorconfig
+    esbenp.prettier-vscode
+    github.vscode-github-actions
+    hashicorp.terraform
+    mechatroner.rainbow-csv
+    ms-azuretools.vscode-containers
+    ms-azuretools.vscode-docker
+    ms-dotnettools.vscode-dotnet-runtime
+    ms-python.python
+    ms-toolsai.jupyter
+    ms-toolsai.jupyter-keymap
+    ms-toolsai.jupyter-renderers
+    ms-toolsai.vscode-jupyter-cell-tags
+    ms-toolsai.vscode-jupyter-slideshow
+    ms-vscode.powershell
+    redhat.vscode-yaml
+    shd101wyy.markdown-preview-enhanced
+    streetsidesoftware.code-spell-checker
+    streetsidesoftware.code-spell-checker-norwegian-bokmal
+    takumii.markdowntable
+    vadimcn.vscode-lldb
+    vue.volar
+    yzhang.markdown-all-in-one
+)
+
 # --- Helper Functions ---
 
-# Function to check if a directory exists and clone if not
 safe_clone() {
     local repo_url=$1
     local target_dir=$2
@@ -30,27 +61,21 @@ safe_clone() {
 
 # --- Installation Steps ---
 
-## Step 1: Install Oh My Zsh (Crucial prerequisite for your plugins)
+## Step 1: Install Oh My Zsh
 if [ ! -d "$OMZ_DIR" ]; then
     echo "➡️ Installing Oh My Zsh..."
-    # The official Oh My Zsh install script handles the chsh part optionally
-    # We use the curl method for simplicity and reliability
     sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
     echo "✅ Oh My Zsh installation complete."
 else
     echo "✅ Oh My Zsh already installed. Skipping."
 fi
 
-## Step 2: Set Zsh as default shell (If not done by Oh My Zsh installer)
+## Step 2: Set Zsh as default shell
 if [ "$SHELL" != "$(which zsh)" ]; then
-    echo "➡️ Setting Zsh as default shell for the current user..."
-    if sudo chsh -s "$(which zsh)" "$(id -un)"; then
-        echo "✅ Zsh set as default shell. You may need to log out/in."
-    else
-        echo "❌ ERROR: Failed to change default shell. Check sudo permissions."
-    fi
+    echo "➡️ Setting Zsh as default shell..."
+    sudo chsh -s "$(which zsh)" "$(id -un)"
 else
-    echo "✅ Zsh is already the default shell. Skipping."
+    echo "✅ Zsh is already the default shell."
 fi
 
 ## Step 3: Install custom Zsh plugins
@@ -62,18 +87,33 @@ safe_clone https://github.com/grigorii-zander/zsh-npm-scripts-autocomplete.git "
 ## Step 4: Create symlink for .zshrc
 echo -e "\n➡️ Creating symlink for .zshrc..."
 if [ -f "$SOURCE_ZSHRC" ]; then
-    # Check if target file exists and is not already the correct symlink
     if [ -e "$TARGET_ZSHRC" ] && [ ! -L "$TARGET_ZSHRC" ]; then
-        # Back up existing file if it's not a symlink
-        echo "⚠️  Found existing non-symlink file at $TARGET_ZSHRC. Backing up to $TARGET_ZSHRC.bak"
         mv "$TARGET_ZSHRC" "$TARGET_ZSHRC.bak"
     fi
-    
-    # Create the symlink (force overwrite if existing symlink)
     ln -sf "$SOURCE_ZSHRC" "$TARGET_ZSHRC"
-    echo "✅ Symlink created: $TARGET_ZSHRC -> $SOURCE_ZSHRC"
+    echo "✅ Symlink created: $TARGET_ZSHRC"
+fi
+
+## Step 5: Install Cursor/VS Code Extensions
+echo -e "\n➡️ Installing Editor Extensions..."
+
+# Detect which binary to use (Cursor on local, Code on Codespaces)
+if command -v cursor >/dev/null 2>&1; then
+    EDITOR_BIN="cursor"
+elif command -v code >/dev/null 2>&1; then
+    EDITOR_BIN="code"
 else
-    echo "❌ ERROR: Source .zshrc file not found at $SOURCE_ZSHRC. Make sure your dotfiles repo is cloned."
+    EDITOR_BIN=""
+    echo "⚠️ Neither 'cursor' nor 'code' CLI found. Skipping extension install."
+fi
+
+if [ -n "$EDITOR_BIN" ]; then
+    echo "Using '$EDITOR_BIN' to install extensions..."
+    for ext in "${EXTENSIONS[@]}"; do
+        echo "Installing $ext..."
+        $EDITOR_BIN --install-extension "$ext" --force
+    done
+    echo "✅ Extension installation process finished."
 fi
 
 echo -e "\n\n🚀 Dotfiles setup complete! Please log out and log back in (or run 'exec zsh') to fully apply changes."
