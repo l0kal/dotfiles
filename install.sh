@@ -29,7 +29,6 @@ EXTENSIONS=(
     ms-toolsai.jupyter-renderers
     ms-toolsai.vscode-jupyter-cell-tags
     ms-toolsai.vscode-jupyter-slideshow
-    ms-vscode.powershell
     redhat.vscode-yaml
     shd101wyy.markdown-preview-enhanced
     streetsidesoftware.code-spell-checker
