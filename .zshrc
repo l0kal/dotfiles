@@ -87,3 +87,4 @@ setopt SHARE_HISTORY
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+#source ~/.forward_ssh_agent.sh -q
