@@ -86,5 +86,14 @@ setopt APPEND_HISTORY
 setopt SHARE_HISTORY
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-#source ~/.forward_ssh_agent.sh -q
+[[ -f ~/.p10k.zsh ]] && source ~/.p10k.zsh
+[[ -f ~/.forward_ssh_agent.sh ]] && source ~/.forward_ssh_agent.sh -q
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
+
+export PATH="$HOME/.local/bin:$PATH"
+[[ -f "$HOME/.local/share/clidp/clidp.zsh" ]] && source "$HOME/.local/share/clidp/clidp.zsh"
+
+export BROWSER=wslview
