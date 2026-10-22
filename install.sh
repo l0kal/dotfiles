@@ -6,10 +6,12 @@ OMZ_DIR="$HOME/.oh-my-zsh"
 ZSH_CUSTOM="${OMZ_DIR}/custom"
 SOURCE_ZSHRC="${DOTFILES_REPO_DIR}/.zshrc"
 TARGET_ZSHRC="$HOME/.zshrc"
+CURSOR_SOURCE_DIR="${DOTFILES_REPO_DIR}/cursor"
+CURSOR_CONFIG_FILES=(settings.json keybindings.json)
 
 show_usage() {
         cat <<EOF
-Usage: $(basename "$0") [all|zsh|extensions]...
+Usage: $(basename "$0") [all|zsh|extensions|cursor]...
 
 Runs dotfiles setup steps.
 
@@ -17,7 +19,11 @@ Arguments:
     all         Run all setup steps (default when no args are provided)
     zsh         Run Zsh setup (Oh My Zsh, default shell, plugins, .zshrc copy)
     extensions  Install Cursor/VS Code extensions
+    cursor      Copy Cursor user settings and keybindings from the repo
     -h, --help  Show this help message
+
+Environment:
+    CURSOR_USER_DIR  Override the target Cursor User directory
 EOF
 }
 
@@ -110,6 +116,120 @@ copy_zshrc() {
     fi
 }
 
+is_wsl() {
+    grep -qiE 'microsoft|wsl' /proc/version 2>/dev/null \
+        || [ -n "${WSL_DISTRO_NAME:-}" ] \
+        || [ -n "${WSLENV:-}" ]
+}
+
+get_windows_username() {
+    local win_user=""
+
+    if command -v cmd.exe >/dev/null 2>&1; then
+        win_user="$(cmd.exe /c "echo %USERNAME%" 2>/dev/null | tr -d '\r\n')"
+    elif command -v whoami.exe >/dev/null 2>&1; then
+        win_user="$(whoami.exe 2>/dev/null | tr -d '\r\n')"
+    fi
+
+    if [ -n "$win_user" ] && [ -d "/mnt/c/Users/$win_user" ]; then
+        echo "$win_user"
+    fi
+}
+
+get_wsl_cursor_user_dir() {
+    local win_user cursor_dir user_home
+
+    win_user="$(get_windows_username)"
+    if [ -n "$win_user" ]; then
+        echo "/mnt/c/Users/${win_user}/AppData/Roaming/Cursor/User"
+        return 0
+    fi
+
+    for cursor_dir in /mnt/c/Users/*/AppData/Roaming/Cursor/User; do
+        if [ -d "$cursor_dir" ]; then
+            echo "$cursor_dir"
+            return 0
+        fi
+    done
+
+    for user_home in /mnt/c/Users/*/; do
+        win_user="$(basename "$user_home")"
+        case "$win_user" in
+            "All Users"|Default|"Default User"|Public) continue ;;
+        esac
+        echo "/mnt/c/Users/${win_user}/AppData/Roaming/Cursor/User"
+        return 0
+    done
+}
+
+get_cursor_user_dir() {
+    if [ -n "${CURSOR_USER_DIR:-}" ]; then
+        echo "$CURSOR_USER_DIR"
+        return 0
+    fi
+
+    if is_wsl && [ -d /mnt/c/Users ]; then
+        local wsl_cursor_dir
+        wsl_cursor_dir="$(get_wsl_cursor_user_dir)"
+        if [ -n "$wsl_cursor_dir" ]; then
+            echo "$wsl_cursor_dir"
+            return 0
+        fi
+        echo "⚠️ WSL detected but Windows user profile not found. Falling back to Linux Cursor path." >&2
+    fi
+
+    echo "${XDG_CONFIG_HOME:-$HOME/.config}/Cursor/User"
+}
+
+copy_cursor_config_file() {
+    local filename=$1
+    local target_dir=$2
+    local source="${CURSOR_SOURCE_DIR}/${filename}"
+    local target="${target_dir}/${filename}"
+
+    if [ ! -f "$source" ]; then
+        echo "⚠️ Source not found, skipping: $source"
+        return 0
+    fi
+
+    mkdir -p "$target_dir"
+
+    if [ -L "$target" ]; then
+        rm -f "$target"
+        echo "➡️ Removed existing symlink: $target"
+    elif [ -e "$target" ]; then
+        cp "$target" "${target}.bak"
+        echo "➡️ Backed up existing file to: ${target}.bak"
+    fi
+
+    if cp "$source" "$target"; then
+        echo "✅ Copied $filename to: $target"
+    else
+        echo "❌ ERROR: Failed to copy $filename to: $target"
+        return 1
+    fi
+}
+
+install_cursor_settings() {
+    echo -e "\n➡️ Installing Cursor user settings..."
+
+    if [ ! -d "$CURSOR_SOURCE_DIR" ]; then
+        echo "❌ ERROR: Cursor config directory not found at $CURSOR_SOURCE_DIR"
+        return 1
+    fi
+
+    local cursor_user_dir
+    cursor_user_dir="$(get_cursor_user_dir)"
+    echo "Using Cursor User directory: $cursor_user_dir"
+
+    local filename
+    for filename in "${CURSOR_CONFIG_FILES[@]}"; do
+        copy_cursor_config_file "$filename" "$cursor_user_dir"
+    done
+
+    echo "✅ Cursor settings installation complete."
+}
+
 install_editor_extensions() {
     echo -e "\n➡️ Installing Editor Extensions..."
 
@@ -142,25 +262,32 @@ run_zsh_setup() {
 
 run_all() {
     run_zsh_setup
+    install_cursor_settings
     install_editor_extensions
 }
 
 # --- Argument Parsing ---
 RUN_ZSH=false
+RUN_CURSOR=false
 RUN_EXTENSIONS=false
 
 if [ $# -eq 0 ]; then
     RUN_ZSH=true
+    RUN_CURSOR=true
     RUN_EXTENSIONS=true
 else
     for arg in "$@"; do
         case "$arg" in
             all)
                 RUN_ZSH=true
+                RUN_CURSOR=true
                 RUN_EXTENSIONS=true
                 ;;
             zsh)
                 RUN_ZSH=true
+                ;;
+            cursor)
+                RUN_CURSOR=true
                 ;;
             extensions|vscode-extensions|vscode)
                 RUN_EXTENSIONS=true
@@ -181,6 +308,10 @@ fi
 # --- Run Selected Steps ---
 if [ "$RUN_ZSH" = true ]; then
     run_zsh_setup
+fi
+
+if [ "$RUN_CURSOR" = true ]; then
+    install_cursor_settings
 fi
 
 if [ "$RUN_EXTENSIONS" = true ]; then
